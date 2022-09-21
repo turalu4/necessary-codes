@@ -1,0 +1,567 @@
+> library(lme4)											
+> library(lmerTest)
+> library(emmeans)
+> library(jtools)
+> library(tidyverse)
+> library(ggpubr)
+> library(readr)
+> wide114 <- read_csv("C:/Users/UT/Downloads/wide114.csv")
+> options(scipen=999)
+
+#1) When all factors included in the global BOLD analysis
+
+> res_gg<-lmer(lnstim ~ lnpre + as.factor(intensity)*as.factor(echotime)*as.factor(gender)*as.factor(center) + (1|id) + (1|brainregion), data=wide114ln)
+> anova(res_gg)
+Type III Analysis of Variance Table with Satterthwaite's method
+                                                                              Sum Sq Mean Sq NumDF DenDF     F value                Pr(>F)    
+lnpre                                                                        27015.6 27015.6     1 30818 153628.0836 < 0.00000000000000022 ***
+as.factor(intensity)                                                          8451.0  2817.0     3 51136  16019.2525 < 0.00000000000000022 ***
+as.factor(echotime)                                                             29.8    14.9     2 50527     84.6770 < 0.00000000000000022 ***
+as.factor(gender)                                                                0.4     0.4     1    27      2.1060             0.1582877    
+as.factor(center)                                                                0.3     0.3     1    27      1.6542             0.2093539    
+as.factor(intensity):as.factor(echotime)                                        62.9    10.5     6 51064     59.6520 < 0.00000000000000022 ***
+as.factor(intensity):as.factor(gender)                                         175.6    58.5     3 51095    332.9194 < 0.00000000000000022 ***
+as.factor(echotime):as.factor(gender)                                            2.6     1.3     2 51065      7.4099             0.0006059 ***
+as.factor(intensity):as.factor(center)                                         201.2    67.1     3 51128    381.3423 < 0.00000000000000022 ***
+as.factor(echotime):as.factor(center)                                           11.3     5.6     2 51091     32.0270   0.00000000000001258 ***
+as.factor(gender):as.factor(center)                                              0.0     0.0     1    27      0.2749             0.6043732    
+as.factor(intensity):as.factor(echotime):as.factor(gender)                      56.9     9.5     6 51065     53.9582 < 0.00000000000000022 ***
+as.factor(intensity):as.factor(echotime):as.factor(center)                      16.3     2.7     6 51064     15.4919 < 0.00000000000000022 ***
+as.factor(intensity):as.factor(gender):as.factor(center)                        28.8     9.6     3 51077     54.6433 < 0.00000000000000022 ***
+as.factor(echotime):as.factor(gender):as.factor(center)                          9.2     4.6     2 51067     26.0472   0.00000000000493844 ***
+as.factor(intensity):as.factor(echotime):as.factor(gender):as.factor(center)    43.7     7.3     6 51065     41.3719 < 0.00000000000000022 ***
+
+
+
+##2) When all factors included in the frontal BOLD analysis
+> res_fg<-lmer(lnstim ~ lnpre + as.factor(intensity)*as.factor(echotime)*as.factor(gender)*as.factor(center) + (1|id) + (1|brainregion), data=frontal)
+> anova(res_fg)
+Type III Analysis of Variance Table with Satterthwaite's method
+                                                                              Sum Sq Mean Sq NumDF  DenDF    F value                Pr(>F)    
+lnpre                                                                        2333.23 2333.23     1 2111.4 16012.6835 < 0.00000000000000022 ***
+as.factor(intensity)                                                          743.52  247.84     3 4712.6  1700.8857 < 0.00000000000000022 ***
+as.factor(echotime)                                                             0.69    0.35     2 4556.2     2.3714             0.0934631 .  
+as.factor(gender)                                                               0.34    0.34     1   25.8     2.3524             0.1372675    
+as.factor(center)                                                               0.11    0.11     1   25.9     0.7737             0.3871637    
+as.factor(intensity):as.factor(echotime)                                        4.36    0.73     6 4695.3     4.9820         0.00004271899 ***
+as.factor(intensity):as.factor(gender)                                          4.56    1.52     3 4710.7    10.4205         0.00000078605 ***
+as.factor(echotime):as.factor(gender)                                           2.17    1.08     2 4695.4     7.4445             0.0005916 ***
+as.factor(intensity):as.factor(center)                                         25.57    8.52     3 4709.2    58.5026 < 0.00000000000000022 ***
+as.factor(echotime):as.factor(center)                                           1.43    0.71     2 4698.4     4.8928             0.0075389 ** 
+as.factor(gender):as.factor(center)                                             0.01    0.01     1   25.8     0.0442             0.8351480    
+as.factor(intensity):as.factor(echotime):as.factor(gender)                      4.71    0.78     6 4695.5     5.3836         0.00001490613 ***
+as.factor(intensity):as.factor(echotime):as.factor(center)                      4.48    0.75     6 4695.4     5.1296         0.00002904687 ***
+as.factor(intensity):as.factor(gender):as.factor(center)                        1.14    0.38     3 4708.4     2.6075             0.0499502 *  
+as.factor(echotime):as.factor(gender):as.factor(center)                         1.02    0.51     2 4695.6     3.4980             0.0303354 *  
+as.factor(intensity):as.factor(echotime):as.factor(gender):as.factor(center)    6.54    1.09     6 4695.6     7.4841         0.00000005344 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+###3)Main global BOLD analysis (When gender and center are excluded)
+> wide114ln<-wide114 %>% mutate(lnpre = log(pre))
+> wide114ln<-wide114ln %>% mutate(lnstim = log(stim))
+> res_g<-lmer(lnstim ~ lnpre + as.factor(intensity)*as.factor(echotime)+(1|id)+(1|brainregion), data=wide114ln)
+> anova(res_g)
+Type III Analysis of Variance Table with Satterthwaite's method
+                                          Sum Sq Mean Sq NumDF DenDF    F value                Pr(>F)    
+lnpre                                    31074.4 31074.4     1 26844 165879.161 < 0.00000000000000022 ***
+as.factor(intensity)                     10252.4  3417.5     3 51192  18242.939 < 0.00000000000000022 ***
+as.factor(echotime)                         22.0    11.0     2 50268     58.587 < 0.00000000000000022 ***
+as.factor(intensity):as.factor(echotime)    93.4    15.6     6 51097     83.115 < 0.00000000000000022 ***
+
+###3a)Means for global BOLD are below
+> emmeans(res_g, list(pairwise ~ intensity), adjust="bonferroni")
+Note: D.f. calculations have been disabled because the number of observations exceeds 3000.
+To enable adjustments, add the argument 'pbkrtest.limit = 51300' (or larger)
+[or, globally, 'set emm_options(pbkrtest.limit = 51300)' or larger];
+but be warned that this may result in large computation time and memory use.
+Note: D.f. calculations have been disabled because the number of observations exceeds 3000.
+To enable adjustments, add the argument 'lmerTest.limit = 51300' (or larger)
+[or, globally, 'set emm_options(lmerTest.limit = 51300)' or larger];
+but be warned that this may result in large computation time and memory use.
+NOTE: Results may be misleading due to involvement in interactions
+$`emmeans of intensity`
+ intensity  emmean     SE  df asymp.LCL asymp.UCL
+ high       0.0982 0.0434 Inf    0.0131     0.183
+ low       -0.4799 0.0434 Inf   -0.5650    -0.395
+ medium     0.8235 0.0434 Inf    0.7384     0.909
+ sham       0.1306 0.0434 Inf    0.0455     0.216
+
+Results are averaged over the levels of: echotime 
+Degrees-of-freedom method: asymptotic 
+Confidence level used: 0.95 
+
+$`pairwise differences of intensity`
+ 1             estimate      SE  df  z.ratio p.value
+ high - low      0.5781 0.00554 Inf  104.442  <.0001
+ high - medium  -0.7253 0.00572 Inf -126.877  <.0001
+ high - sham    -0.0324 0.00555 Inf   -5.830  <.0001
+ low - medium   -1.3034 0.00557 Inf -233.857  <.0001
+ low - sham     -0.6105 0.00539 Inf -113.164  <.0001
+ medium - sham   0.6929 0.00553 Inf  125.306  <.0001
+
+Results are averaged over the levels of: echotime 
+Degrees-of-freedom method: asymptotic 
+P value adjustment: bonferroni method for 6 tests 
+> emmVg <- emmeans(res_g, ~ intensity)
+
+###3b)Effect size calculations for global BOLD are below
+> ESg <- summary(eff_size(emmVg, sigma=sd(wide114ln[wide114ln$intensity == "sham",]$lnpre), edf=Inf, method = "identity"))
+> ESg
+
+contrast effect.size     SE  df asymp.LCL asymp.UCL
+ high          0.0772 0.0341 Inf    0.0103     0.144
+ low          -0.3772 0.0341 Inf   -0.4441    -0.310
+ medium        0.6473 0.0341 Inf    0.5804     0.714
+ sham          0.1026 0.0341 Inf    0.0358     0.169
+
+Results are averaged over the levels of: echotime 
+sigma used for effect sizes: 1.272 
+Degrees-of-freedom method: inherited from asymptotic when re-gridding 
+Confidence level used: 0.95 
+
+
+####4)Main frontal BOLD analysis (When gender and center are excluded)
+> wide114ln<-wide114 %>% mutate(lnpre = log(pre))
+> wide114ln<-wide114ln %>% mutate(lnstim = log(stim))
+> frontal <- wide114ln %>% filter(brainregion %in% c("~ctx_rh_G_front_middle","~ctx_lh_G_front_middle", "~ctx_rh_S_front_middle", "~ctx_lh_S_front_middle","~ctx_rh_S_front_sup", "~ctx_rh_G_and_S_transv_frontopol","~ctx_rh_G_front_inf-Triangul", "~ctx_lh_S_front_sup", "~ctx_rh_G_front_sup", "~ctx_lh_G_front_inf-Triangul", "~ctx_rh_S_front_inf", "~ctx_lh_G_front_sup", "~ctx_lh_S_front_inf", "~ctx_lh_G_and_S_transv_frontopol"))
+> res_f<-lmer(lnstim ~ lnpre + as.factor(intensity)*as.factor(echotime)+(1|id)+(1|brainregion), data=frontal)
+> anova(res_f)
+Type III Analysis of Variance Table with Satterthwaite's method
+                                          Sum Sq Mean Sq NumDF  DenDF    F value                Pr(>F)    
+lnpre                                    2779.80 2779.80     1 1419.2 17761.5719 < 0.00000000000000022 ***
+as.factor(intensity)                      894.85  298.28     3 4744.7  1905.8947 < 0.00000000000000022 ***
+as.factor(echotime)                         0.38    0.19     2 4443.3     1.2102                0.2982    
+as.factor(intensity):as.factor(echotime)    6.69    1.11     6 4728.2     7.1220          0.0000001426 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+####4a)Means for frontal BOLD are below
+> emmeans(res_f, list(pairwise ~ intensity), adjust="bonferroni")
+$`emmeans of intensity`
+ intensity emmean     SE  df asymp.LCL asymp.UCL
+ high      -0.173 0.0421 Inf    -0.256   -0.0908
+ low       -0.755 0.0419 Inf    -0.838   -0.6733
+ medium     0.514 0.0420 Inf     0.432    0.5961
+ sham      -0.154 0.0419 Inf    -0.236   -0.0719
+
+Results are averaged over the levels of: echotime 
+Degrees-of-freedom method: asymptotic 
+Confidence level used: 0.95 
+
+$`pairwise differences of intensity`
+ 1             estimate     SE  df z.ratio p.value
+ high - low      0.5822 0.0165 Inf  35.192  <.0001
+ high - medium  -0.6871 0.0171 Inf -40.084  <.0001
+ high - sham    -0.0192 0.0166 Inf  -1.160  1.0000
+ low - medium   -1.2693 0.0168 Inf -75.611  <.0001
+ low - sham     -0.6014 0.0161 Inf -37.282  <.0001
+ medium - sham   0.6679 0.0167 Inf  40.072  <.0001
+
+Results are averaged over the levels of: echotime 
+Degrees-of-freedom method: asymptotic 
+P value adjustment: bonferroni method for 6 tests 
+
+####4b)Effect size calculations for frontal BOLD are below
+> emmVf <- emmeans(res_f, ~ intensity)
+> ESf <- summary(eff_size(emmVf, sigma=sd(frontal[frontal$intensity == "sham",]$lnpre), edf=Inf, method = "identity"))
+> ESf
+ contrast effect.size     SE  df asymp.LCL asymp.UCL
+ high          -0.158 0.0383 Inf    -0.233   -0.0826
+ low           -0.688 0.0382 Inf    -0.763   -0.6130
+ medium         0.468 0.0382 Inf     0.393    0.5428
+ sham          -0.140 0.0382 Inf    -0.215   -0.0655
+
+#####5)Main left frontal BOLD analysis (When gender and center are excluded)
+> wide114ln<-wide114 %>% mutate(lnpre = log(pre))
+> wide114ln<-wide114ln %>% mutate(lnstim = log(stim))
+> lfrontal <- wide114ln %>% filter(brainregion %in% c("~ctx_lh_G_front_middle", "~ctx_lh_S_front_middle", "~ctx_lh_S_front_sup", "~ctx_lh_G_front_inf-Triangul", "~ctx_lh_G_front_sup", "~ctx_lh_S_front_inf", "~ctx_lh_G_and_S_transv_frontopol"))
+> res_lf<-lmer(lnstim ~ lnpre + as.factor(intensity)*as.factor(echotime)+(1|id)+(1|brainregion), data=lfrontal)
+> anova(res_lf)
+Type III Analysis of Variance Table with Satterthwaite's method
+                                          Sum Sq Mean Sq NumDF   DenDF   F value                Pr(>F)    
+lnpre                                    1351.84 1351.84     1  499.65 8756.4589 < 0.00000000000000022 ***
+as.factor(intensity)                      422.38  140.79     3 2345.73  911.9811 < 0.00000000000000022 ***
+as.factor(echotime)                         0.09    0.04     2 2124.88    0.2840              0.752816    
+as.factor(intensity):as.factor(echotime)    2.84    0.47     6 2340.58    3.0693              0.005394 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+#####5a)Means for left frontal BOLD are below
+> emmeans(res_lf, list(pairwise ~ intensity), adjust="bonferroni")
+$`emmeans of intensity`
+ intensity emmean     SE   df lower.CL upper.CL
+ high      -0.196 0.0441 39.6   -0.285  -0.1072
+ low       -0.754 0.0438 38.6   -0.843  -0.6659
+ medium     0.491 0.0440 39.2    0.402   0.5796
+ sham      -0.158 0.0438 38.5   -0.247  -0.0695
+
+Results are averaged over the levels of: echotime 
+Degrees-of-freedom method: kenward-roger 
+Confidence level used: 0.95 
+
+$`pairwise differences of intensity`
+ 1             estimate     SE   df t.ratio p.value
+ high - low      0.5581 0.0232 2351  24.021  <.0001
+ high - medium  -0.6870 0.0241 2357 -28.545  <.0001
+ high - sham    -0.0383 0.0232 2352  -1.650  0.5948
+ low - medium   -1.2451 0.0239 2346 -52.155  <.0001
+ low - sham     -0.5965 0.0227 2349 -26.306  <.0001
+ medium - sham   0.6487 0.0236 2358  27.530  <.0001
+
+Results are averaged over the levels of: echotime 
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: bonferroni method for 6 tests 
+
+#####5b)Effect size calculations for left frontal BOLD are below
+> emmVlf <- emmeans(res_lf, ~ intensity)
+> ESlf <- summary(eff_size(emmVlf, sigma=sd(lfrontal[lfrontal$intensity == "sham",]$lnpre), edf=Inf, method = "identity"))
+> ESlf
+contrast effect.size     SE   df lower.CL upper.CL
+ high          -0.185 0.0414 39.6   -0.268  -0.1008
+ low           -0.709 0.0412 38.6   -0.793  -0.6260
+ medium         0.461 0.0414 39.2    0.378   0.5449
+ sham          -0.149 0.0412 38.5   -0.232  -0.0653
+
+Results are averaged over the levels of: echotime 
+sigma used for effect sizes: 1.064 
+Degrees-of-freedom method: inherited from kenward-roger when re-gridding 
+Confidence level used: 0.95 
+
+######6)Main right frontal BOLD analysis (When gender and center are excluded)
+> wide114ln<-wide114 %>% mutate(lnpre = log(pre))
+> wide114ln<-wide114ln %>% mutate(lnstim = log(stim))
+> rfrontal <- wide114ln %>% filter(brainregion %in% c("~ctx_rh_G_front_middle", "~ctx_rh_S_front_middle", "~ctx_rh_S_front_sup", "~ctx_rh_G_and_S_transv_frontopol","~ctx_rh_G_front_inf-Triangul", "~ctx_rh_G_front_sup", "~ctx_rh_S_front_inf"))
+> res_rf<-lmer(lnstim ~ lnpre + as.factor(intensity)*as.factor(echotime)+(1|id)+(1|brainregion), data=rfrontal)
+> anova(res_rf)
+Type III Analysis of Variance Table with Satterthwaite's method
+                                          Sum Sq Mean Sq NumDF  DenDF   F value                Pr(>F)    
+lnpre                                    1354.47 1354.47     1 1041.5 8492.0342 < 0.00000000000000022 ***
+as.factor(intensity)                      474.38  158.13     3 2357.1  991.3876 < 0.00000000000000022 ***
+as.factor(echotime)                         0.35    0.17     2 2274.7    1.0860             0.3377276    
+as.factor(intensity):as.factor(echotime)    4.16    0.69     6 2341.6    4.3434             0.0002286 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+######6a)Means for right frontal BOLD are below
+> emmeans(res_rf, list(pairwise ~ intensity), adjust="bonferroni")
+$`emmeans of intensity`
+ intensity emmean     SE   df lower.CL upper.CL
+ high      -0.153 0.0424 40.4   -0.239  -0.0675
+ low       -0.760 0.0420 39.0   -0.845  -0.6751
+ medium     0.537 0.0422 39.6    0.451   0.6218
+ sham      -0.154 0.0420 39.0   -0.239  -0.0689
+
+Results are averaged over the levels of: echotime 
+Degrees-of-freedom method: kenward-roger 
+Confidence level used: 0.95 
+
+$`pairwise differences of intensity`
+ 1              estimate     SE   df t.ratio p.value
+ high - low     0.606903 0.0237 2355  25.646  <.0001
+ high - medium -0.689710 0.0246 2366 -28.055  <.0001
+ high - sham    0.000696 0.0237 2357   0.029  1.0000
+ low - medium  -1.296613 0.0238 2364 -54.483  <.0001
+ low - sham    -0.606208 0.0230 2348 -26.337  <.0001
+ medium - sham  0.690406 0.0237 2363  29.113  <.0001
+
+Results are averaged over the levels of: echotime 
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: bonferroni method for 6 tests 
+
+######6b)Effect size calculations for right frontal BOLD are below
+> emmVrf <- emmeans(res_rf, ~ intensity)
+> ESrf <- summary(eff_size(emmVrf, sigma=sd(rfrontal[rfrontal$intensity == "sham",]$lnpre), edf=Inf, method = "identity"))
+> ESrf
+contrast effect.size     SE   df lower.CL upper.CL
+ high          -0.135 0.0374 40.4   -0.211  -0.0596
+ low           -0.672 0.0371 39.0   -0.747  -0.5964
+ medium         0.474 0.0373 39.6    0.399   0.5494
+ sham          -0.136 0.0371 39.0   -0.211  -0.0609
+
+Results are averaged over the levels of: echotime 
+sigma used for effect sizes: 1.132 
+Degrees-of-freedom method: inherited from kenward-roger when re-gridding 
+Confidence level used: 0.95 
+
+#######7)Correlation between averaged global BOLD and MADRS scores
+> wide114ln<-wide114 %>% mutate(lnpre = log(pre))
+> wide114ln<-wide114ln %>% mutate(lnstim = log(stim))
+> aggg<-aggregate(cbind(lnpre, lnstim, baselineMADRS, aftertreatmentMADRS) ~ id, data = wide114ln, FUN=mean)
+
+#######7a)Normality tests for averaged global BOLD and MADRS
+> shapiro.test(aggg$lnpre)
+
+	Shapiro-Wilk normality test
+
+data:  aggg$lnpre
+W = 0.97556, p-value = 0.6819
+
+> shapiro.test(aggg$lnstim)
+
+	Shapiro-Wilk normality test
+
+data:  aggg$lnstim
+W = 0.81992, p-value = 0.0001234
+
+> shapiro.test(aggg$baselineMADRS)
+
+	Shapiro-Wilk normality test
+
+data:  aggg$baselineMADRS
+W = 0.9334, p-value = 0.05429
+
+> shapiro.test(aggg$aftertreatmentMADRS)
+
+	Shapiro-Wilk normality test
+
+data:  aggg$aftertreatmentMADRS
+W = 0.96339, p-value = 0.3576
+
+#######7b)Correlations between averaged global BOLD and MADRS	
+> cor.test(aggg$lnpre, aggg$baselineMADRS)
+
+	Pearson's product-moment correlation
+
+data:  aggg$lnpre and aggg$baselineMADRS
+t = 1.4473, df = 29, p-value = 0.1585
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ -0.1043967  0.5621824
+sample estimates:
+      cor 
+0.2595445 
+
+
+> cor.test(aggg$lnstim, aggg$aftertreatmentMADRS, method = "spearman")
+
+	Spearman's rank correlation rho
+
+data:  aggg$lnstim and aggg$aftertreatmentMADRS
+S = 4449, p-value = 0.5813
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+      rho 
+0.1030305 
+
+Warning message:
+In cor.test.default(aggg$lnstim, aggg$aftertreatmentMADRS, method = "spearman") :
+  Cannot compute exact p-value with ties
+
+#######7c)Graphs
+> ggscatter(aggg, x = "lnpre", y = "baselineMADRS", add = "reg.line", conf.int = TRUE, cor.coef = TRUE,  xlab = "(log) Averaged Baseline Global BOLD", ylab = "Baseline MADRS Score")
+> ggscatter(aggg, x = "lnstim", y = "aftertreatmentMADRS", add = "reg.line", conf.int = TRUE, cor.coef = TRUE,  xlab = "(log) Averaged Global BOLD Following NIR", ylab = "After Treatment MADRS Score", cor.method="spearman")
+
+########8)Correlation between averaged Frontal BOLD and MADRS scores
+> wide114ln<-wide114 %>% mutate(lnpre = log(pre))
+> wide114ln<-wide114ln %>% mutate(lnstim = log(stim))
+> frontal <- wide114ln %>% filter(brainregion %in% c("~ctx_rh_G_front_middle","~ctx_lh_G_front_middle", "~ctx_rh_S_front_middle", "~ctx_lh_S_front_middle","~ctx_rh_S_front_sup", "~ctx_rh_G_and_S_transv_frontopol","~ctx_rh_G_front_inf-Triangul", "~ctx_lh_S_front_sup", "~ctx_rh_G_front_sup", "~ctx_lh_G_front_inf-Triangul", "~ctx_rh_S_front_inf", "~ctx_lh_G_front_sup", "~ctx_lh_S_front_inf", "~ctx_lh_G_and_S_transv_frontopol"))
+> aggf<-aggregate(cbind(lnpre, lnstim, baselineMADRS, aftertreatmentMADRS) ~ id, data = frontal, FUN=mean)
+
+########8a)Normality tests for averaged frontal BOLD and MADRS
+> shapiro.test(aggf$lnpre)
+
+	Shapiro-Wilk normality test
+
+data:  aggf$lnpre
+W = 0.95446, p-value = 0.2069
+
+> shapiro.test(aggf$lnstim)
+
+	Shapiro-Wilk normality test
+
+data:  aggf$lnstim
+W = 0.82096, p-value = 0.0001293
+
+> shapiro.test(aggf$baselineMADRS)
+
+	Shapiro-Wilk normality test
+
+data:  aggf$baselineMADRS
+W = 0.9334, p-value = 0.05429
+
+> shapiro.test(aggf$aftertreatmentMADRS)
+
+	Shapiro-Wilk normality test
+
+data:  aggf$aftertreatmentMADRS
+W = 0.96339, p-value = 0.3576
+
+########8b)Correlations between averaged frontal BOLD and MADRS
+> cor.test(aggf$lnpre, aggf$baselineMADRS)
+
+	Pearson's product-moment correlation
+
+data:  aggf$lnpre and aggf$baselineMADRS
+t = 1.869, df = 29, p-value = 0.07175
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ -0.02993593  0.61121074
+sample estimates:
+      cor 
+0.3278822 
+
+> cor.test(aggf$lnstim, aggf$aftertreatmentMADRS, method = "spearman")
+
+	Spearman's rank correlation rho
+
+data:  aggf$lnstim and aggf$aftertreatmentMADRS
+S = 4575.2, p-value = 0.6783
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+       rho 
+0.07757592 
+
+Warning message:
+In cor.test.default(aggf$lnstim, aggf$aftertreatmentMADRS, method = "spearman") :
+  Cannot compute exact p-value with ties
+
+########8c)Graphs
+> ggscatter(aggf, x = "lnpre", y = "baselineMADRS", add = "reg.line", conf.int = TRUE, cor.coef = TRUE,  xlab = "(log) Averaged Baseline Frontal Global BOLD", ylab = "Baseline MADRS Score")
+> ggscatter(aggf, x = "lnstim", y = "aftertreatmentMADRS", add = "reg.line", conf.int = TRUE, cor.coef = TRUE,  xlab = "(log) Averaged Frontal BOLD Following NIR", ylab = "After Treatment MADRS Score", cor.method="spearman")
+
+
+#########9)Correlation between averaged left frontal and MADRS
+> wide114ln<-wide114 %>% mutate(lnpre = log(pre))
+> wide114ln<-wide114ln %>% mutate(lnstim = log(stim))
+> lfrontal <- wide114ln %>% filter(brainregion %in% c("~ctx_lh_G_front_middle", "~ctx_lh_S_front_middle", "~ctx_lh_S_front_sup", "~ctx_lh_G_front_inf-Triangul", "~ctx_lh_G_front_sup", "~ctx_lh_S_front_inf", "~ctx_lh_G_and_S_transv_frontopol"))
+> agglf<-aggregate(cbind(lnpre, lnstim, baselineMADRS, aftertreatmentMADRS) ~ id, data = lfrontal, FUN=mean)
+
+#########9a)Normality tests for averaged left frontal BOLD and MADRS
+> shapiro.test(agglf$lnpre)
+
+	Shapiro-Wilk normality test
+
+data:  agglf$lnpre
+W = 0.95883, p-value = 0.2716
+
+> shapiro.test(agglf$lnstim)
+
+	Shapiro-Wilk normality test
+
+data:  agglf$lnstim
+W = 0.83131, p-value = 0.0002077
+
+> shapiro.test(agglf$baselineMADRS)
+
+	Shapiro-Wilk normality test
+
+data:  agglf$baselineMADRS
+W = 0.9334, p-value = 0.05429
+
+> shapiro.test(agglf$aftertreatmentMADRS)
+
+	Shapiro-Wilk normality test
+
+data:  agglf$aftertreatmentMADRS
+W = 0.96339, p-value = 0.3576
+
+#########9b)Correlations between averaged left frontal BOLD and MADRS
+cor.test(agglf$lnpre, agglf$baselineMADRS)
+
+	Pearson's product-moment correlation
+
+data:  agglf$lnpre and agglf$baselineMADRS
+t = 1.9401, df = 29, p-value = 0.06215
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ -0.01750012  0.61894606
+sample estimates:
+      cor 
+0.3389418 
+
+> cor.test(agglf$lnstim, agglf$aftertreatmentMADRS, method = "spearman")
+
+	Spearman's rank correlation rho
+
+data:  agglf$lnstim and agglf$aftertreatmentMADRS
+S = 4734.5, p-value = 0.8082
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+       rho 
+0.04545464 
+
+Warning message:
+In cor.test.default(agglf$lnstim, agglf$aftertreatmentMADRS, method = "spearman") :
+  Cannot compute exact p-value with ties
+#########9c)Graphs
+> ggscatter(agglf, x = "lnpre", y = "baselineMADRS", add = "reg.line", conf.int = TRUE, cor.coef = TRUE,  xlab = "(log) Averaged Baseline Left Frontal Global BOLD", ylab = "Baseline MADRS Score")
+> ggscatter(agglf, x = "lnstim", y = "aftertreatmentMADRS", add = "reg.line", conf.int = TRUE, cor.coef = TRUE,  xlab = "(log) Averaged left Frontal BOLD Following NIR", ylab = "After Treatment MADRS Score", cor.method="spearman")
+
+
+#10)Averaged right frontal BOLD and MADRS correlations
+> wide114ln<-wide114 %>% mutate(lnpre = log(pre))
+> wide114ln<-wide114ln %>% mutate(lnstim = log(stim))
+> rfrontal <- wide114ln %>% filter(brainregion %in% c("~ctx_rh_G_front_middle", "~ctx_rh_S_front_middle", "~ctx_rh_S_front_sup", "~ctx_rh_G_and_S_transv_frontopol","~ctx_rh_G_front_inf-Triangul", "~ctx_rh_G_front_sup", "~ctx_rh_S_front_inf"))
+> aggrf<-aggregate(cbind(lnpre, lnstim, baselineMADRS, aftertreatmentMADRS) ~ id, data = rfrontal, FUN=mean)
+
+#10a)Normality tests
+shapiro.test(aggrf$lnpre)
+
+	Shapiro-Wilk normality test
+
+data:  aggrf$lnpre
+W = 0.96603, p-value = 0.417
+
+> shapiro.test(aggrf$lnstim)
+
+	Shapiro-Wilk normality test
+
+data:  aggrf$lnstim
+W = 0.83882, p-value = 0.0002955
+
+> shapiro.test(aggrf$baselineMADRS)
+
+	Shapiro-Wilk normality test
+
+data:  aggrf$baselineMADRS
+W = 0.9334, p-value = 0.05429
+
+> shapiro.test(aggrf$aftertreatmentMADRS)
+
+	Shapiro-Wilk normality test
+
+data:  aggrf$aftertreatmentMADRS
+W = 0.96339, p-value = 0.3576
+
+#10c)Correlation between averaged right frontal BOLD and MADRS
+cor.test(aggrf$lnpre, aggrf$baselineMADRS)
+
+	Pearson's product-moment correlation
+
+data:  aggrf$lnpre and aggrf$baselineMADRS
+t = 1.7301, df = 29, p-value = 0.09424
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ -0.05435688  0.59565544
+sample estimates:
+      cor 
+0.3058746 
+
+> cor.test(aggrf$lnstim, aggrf$aftertreatmentMADRS, method = "spearman")
+
+	Spearman's rank correlation rho
+
+data:  aggrf$lnstim and aggrf$aftertreatmentMADRS
+S = 4878.8, p-value = 0.9304
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+       rho 
+0.01636367 
+
+Warning message:
+In cor.test.default(aggrf$lnstim, aggrf$aftertreatmentMADRS, method = "spearman") :
+  Cannot compute exact p-value with ties
+
+#10c)right frontal graphs
+> ggscatter(aggrf, x = "lnpre", y = "baselineMADRS", add = "reg.line", conf.int = TRUE, cor.coef = TRUE,  xlab = "(log) Averaged Baseline Right Frontal Global BOLD", ylab = "Baseline MADRS Score")
+
+
+##Some extra work on correlations
+> wide114ln<-wide114 %>% mutate(lnpre = log(pre))
+> wide114ln<-wide114ln %>% mutate(lnstim = log(stim))
+> agggtot<-aggregate(cbind(lnpre, lnstim, baselineMADRS, aftertreatmentMADRS) ~ id + intensity + echotime, data = wide114ln, FUN=mean)
+> ggscatter(agggtot, x = "lnstim", y = "aftertreatmentMADRS", add = "reg.line", conf.int = TRUE, cor.coef = TRUE,  xlab = "(log) Averaged Global BOLD Following NIR", ylab = "After Treatment MADRS Score", cor.method="spearman", facet.by = c("intensity", "echotime"))
+
+> agggtotint<-aggregate(cbind(lnpre, lnstim, baselineMADRS, aftertreatmentMADRS) ~ id + intensity, data = wide114ln, FUN=mean)
+> ggscatter(agggtot, x = "lnstim", y = "aftertreatmentMADRS", add = "reg.line", conf.int = TRUE, cor.coef = TRUE,  xlab = "(log) Averaged Global BOLD Following NIR", ylab = "After Treatment MADRS Score", cor.method="spearman", facet.by = "intensity")
